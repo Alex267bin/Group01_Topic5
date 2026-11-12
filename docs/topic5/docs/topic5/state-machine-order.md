@@ -1,4 +1,3 @@
-
 # State Machine Diagram - Order
 
 ## 1. Overview
