@@ -1,4 +1,3 @@
-
 # Sequence Diagram - Order Processing
 
 ## 1. Overview
@@ -44,51 +43,44 @@ sequenceDiagram
     alt Stock available
         I-->>C: stockAvailable
         C->>I: reserveStock(itemId, qty)
+        I-->>C: reservationSucceeded()
 
-        alt Reservation successful
-            I-->>C: reservationSucceeded()
-            C->>C: createOrder(Pending)
-            C->>T: startTimer(orderId, 15m)
-            C-->>UI: orderCreated(orderId)
-            UI-->>Customer: Show Pending order
+        C->>C: createOrder(Pending)
+        C->>T: startTimer(orderId, 15m)
+        C-->>UI: orderCreated(orderId)
+        UI-->>Customer: Show Pending order
 
-            C->>P: processPayment(orderId, amount)
+        C->>P: processPayment(orderId, amount)
 
-            alt Payment successful
-                P-->>C: paymentSucceeded
-                C->>I: confirmStockDeduction(itemId, qty)
-                I-->>C: stockConfirmed()
-                C->>C: updateStatus(Paid)
-                C->>T: cancelTimer(orderId)
-                C-->>UI: orderConfirmed(orderId)
-                UI-->>Customer: Show payment success
+        alt Payment successful
+            P-->>C: paymentSucceeded
+            C->>I: confirmStockDeduction(itemId, qty)
+            I-->>C: stockConfirmed()
+            C->>C: updateStatus(Paid)
+            C->>T: cancelTimer(orderId)
+            C-->>UI: orderConfirmed(orderId)
+            UI-->>Customer: Show payment success
 
-                C->>C: dispatchOrder()
-                C->>C: updateStatus(Shipping)
-                C->>C: deliveryConfirmed()
-                C->>C: updateStatus(Completed)
+            C->>C: dispatchOrder()
+            C->>C: updateStatus(Shipping)
+            C->>C: deliveryConfirmed()
+            C->>C: updateStatus(Completed)
 
-            else Payment failed
-                P-->>C: paymentFailed
-                C->>I: releaseStock(itemId, qty)
-                I-->>C: stockReleased()
-                C->>C: updateStatus(Cancelled)
-                C-->>UI: orderCancelled()
-                UI-->>Customer: Show payment failure
+        else Payment failed
+            P-->>C: paymentFailed
+            C->>I: releaseStock(itemId, qty)
+            I-->>C: stockReleased()
+            C->>C: updateStatus(Cancelled)
+            C-->>UI: orderCancelled()
+            UI-->>Customer: Show payment failure
 
-            else Payment timeout
-                T-->>C: timeoutExpired(orderId)
-                C->>I: releaseStock(itemId, qty)
-                I-->>C: stockReleased()
-                C->>C: updateStatus(Cancelled)
-                C-->>UI: orderCancelled()
-                UI-->>Customer: Show timeout message
-            end
-
-        else Reservation failed
-            I-->>C: reservationFailed()
-            C-->>UI: outOfStock()
-            UI-->>Customer: Show out of stock
+        else Payment timeout
+            T-->>C: timeoutExpired(orderId)
+            C->>I: releaseStock(itemId, qty)
+            I-->>C: stockReleased()
+            C->>C: updateStatus(Cancelled)
+            C-->>UI: orderCancelled()
+            UI-->>Customer: Show timeout message
         end
 
     else Stock unavailable
