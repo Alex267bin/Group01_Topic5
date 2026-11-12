@@ -1,3 +1,4 @@
+
 # Sequence Diagram - Order Processing
 
 ## 1. Overview
