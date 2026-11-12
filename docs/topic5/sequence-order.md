@@ -27,7 +27,6 @@ It includes:
 ```mermaid
 sequenceDiagram
     autonumber
-
     actor Customer
     participant UI as OrderUI
     participant C as OrderController
@@ -35,32 +34,31 @@ sequenceDiagram
     participant P as PaymentService
     participant T as TimerService
 
-    Customer->>UI: createOrderRequest()
-    UI->>C: checkout(itemId, qty, amount)
-
+    Customer->>UI: Place order
+    UI->>C: createOrder(itemId, qty)
     C->>I: checkStock(itemId, qty)
 
     alt Stock available
         I-->>C: stockAvailable
         C->>I: reserveStock(itemId, qty)
-        I-->>C: reservationSucceeded()
-
+        I-->>C: reservationSucceeded
         C->>C: createOrder(Pending)
         C->>T: startTimer(orderId, 15m)
-        C-->>UI: orderCreated(orderId)
+        C-->>UI: Order created
         UI-->>Customer: Show Pending order
 
+        Customer->>UI: Submit payment
+        UI->>C: processPayment(orderId, amount)
         C->>P: processPayment(orderId, amount)
 
         alt Payment successful
             P-->>C: paymentSucceeded
             C->>I: confirmStockDeduction(itemId, qty)
-            I-->>C: stockConfirmed()
+            I-->>C: stockConfirmed
             C->>C: updateStatus(Paid)
             C->>T: cancelTimer(orderId)
-            C-->>UI: orderConfirmed(orderId)
-            UI-->>Customer: Show payment success
-
+            C-->>UI: Payment successful
+            UI-->>Customer: Show Paid order
             C->>C: dispatchOrder()
             C->>C: updateStatus(Shipping)
             C->>C: deliveryConfirmed()
@@ -69,23 +67,23 @@ sequenceDiagram
         else Payment failed
             P-->>C: paymentFailed
             C->>I: releaseStock(itemId, qty)
-            I-->>C: stockReleased()
+            I-->>C: stockReleased
             C->>C: updateStatus(Cancelled)
-            C-->>UI: orderCancelled()
-            UI-->>Customer: Show payment failure
+            C-->>UI: Order cancelled
+            UI-->>Customer: Show cancellation
 
         else Payment timeout
             T-->>C: timeoutExpired(orderId)
             C->>I: releaseStock(itemId, qty)
-            I-->>C: stockReleased()
+            I-->>C: stockReleased
             C->>C: updateStatus(Cancelled)
-            C-->>UI: orderCancelled()
-            UI-->>Customer: Show timeout message
+            C-->>UI: Order cancelled
+            UI-->>Customer: Show timeout
         end
 
     else Stock unavailable
         I-->>C: stockUnavailable
-        C-->>UI: outOfStock()
+        C-->>UI: outOfStock
         UI-->>Customer: Show out of stock
     end
 ```
